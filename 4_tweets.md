@@ -1,17 +1,16 @@
 ---
-title: "4. Tweet Text Mining"
+title: "Tweet Text Mining"
 author: "Michael Weisner"
 date: "3/8/2019"
 output: html_document
+layout: base
 ---
 
 This tutorial is heavily based on the tutorial written by Leah Wasser and Carson Farmer, [https://www.earthdatascience.org/courses/earth-analytics/get-data-using-apis/text-mining-twitter-data-intro-r/](here).
 
 # Searching for Tweets Related to Climate
 
-
-
-```{r}
+```R
 # load twitter library - the rtweet library is recommended now over twitteR
 library(rtweet)
 # plotting and pipes - tidyverse!
@@ -24,8 +23,7 @@ library(igraph)
 library(ggraph)
 ```
 
-
-```{r}
+```R
 climate_tweets <- search_tweets(q = "#climatechange", n = 10000,
                                       lang = "en",
                                       include_rts = FALSE)

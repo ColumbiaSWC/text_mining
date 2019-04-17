@@ -23,12 +23,14 @@ Packages for this tutorial include
 * ggplot2
 
 ## Package Installation (Optional)
-```{r package installation, eval=FALSE}
+
+```R
 # install.packages(c("tidyverse", "dplyr", "ggraph", "tidytext", "gutenbergr", "janeaustenr", "tm", "wordcloud", "topicmodels", "text2vec", "ggplot2", "quanteda"))
 ```
 
 ## Basic Packages to Load
-```{r basic packages}
+
+```R
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -61,7 +63,7 @@ The `unnest_tokens` function in the **tidytext** package can parse words, senten
 
 ### Examples:
 
-```{r}
+```R
 library(tidytext)
 example(unnest_tokens)
 ```
@@ -80,7 +82,7 @@ The **tidyverse** also uses some database-style logic in order to merge `data.fr
 
 To eliminate stop words we can do so with an `anti_join`:
 
-```{r}
+```R
 library(gutenbergr)
 hgwells <- gutenberg_download(c(35, 36, 5230, 159)) # Books by H.G. Wells
 
@@ -91,7 +93,7 @@ tidy_hgwells_stop
 
 
 ### Remove Stopwords
-```{r}
+```R
 tidy_hgwells <- tidy_hgwells_stop %>% 
   anti_join(stop_words)
 tidy_hgwells
@@ -99,7 +101,7 @@ tidy_hgwells
 
 
 ### Sort By Frequency
-```{r}
+```R
 tidy_hgwells %>%
   count(word, sort = TRUE)
 ```
@@ -111,7 +113,7 @@ Text may have a sentiment that is easy for a human to pick up on but the sentime
 
 Still, there are efforts to allow for analysis of the sentiment of text. The **tidytext** package includes a `data.frame` call `sentiments`
 
-```{r}
+```R
 sentiments
 table(sentiments$score)
 ```
@@ -120,12 +122,12 @@ These are scored by three different sets of researchers. We can then `left_join`
 
 
 ### Jane Austen Books
-```{r}
+```R
 library(janeaustenr)
 library(stringr)
 ```
 
-```{r}
+```R
 tidy_books <- austen_books() %>%
   group_by(book) %>%
   mutate(linenumber = row_number(),
@@ -141,7 +143,7 @@ tidy_books
 There are several sentiment analysis datasets, for example here are sentiment assignments from the [National Resource Council of Canada's Emotional Lexicon](https://www.nrc-cnrc.gc.ca/eng/solutions/advisory/emotion_lexicons.html)
 
 Let's find words that are associated with being joyful
-```{r}
+```R
 nrc_joy <- get_sentiments("nrc") %>% 
   filter(sentiment == "joy") # extract joyful words as determined by the nrc group
 
@@ -149,7 +151,7 @@ head(nrc_joy)
 ```
 
 Let's look at the sentiment of words in the book "Emma"
-```{r}
+```R
 tidy_books %>%
   filter(book == "Emma") %>%
   inner_join(nrc_joy) %>%
@@ -157,7 +159,7 @@ tidy_books %>%
 ```
 
 Now let's do an inner join (so just of the words that are in both datsaets) of Emma with the Bing sentiment analysis
-```{r}
+```R
 jane_austen_sentiment <- tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(book, index = linenumber %/% 80, sentiment) %>%
@@ -170,14 +172,14 @@ head(jane_austen_sentiment)
 Notice it has both negative and positive scores and a net sentiment (representing positive and negative language, for whatever that's worth).
 
 And now let's plot it
-```{r}
+```R
 ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~book, ncol = 2, scales = "free_x")
 ```
 
 Lastly, let's do a sentiment analysis of the most frequent words' contribution to positive and negative sentiment.
-```{r}
+```R
 tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
@@ -197,7 +199,7 @@ tidy_books %>%
 
 ### Word Clouds
 R Also has good libraries for wod clouds (which are less useful for statistics, but fun)
-```{r}
+```R
 library(wordcloud)
 
 tidy_books %>%
@@ -208,7 +210,7 @@ tidy_books %>%
 
 We could color the words by sentiment.
 A good list of colors is available [here](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf)
-```{r}
+```R
 sentiment_books <- tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
@@ -236,7 +238,7 @@ OR
 
 The text of the Federalist Papers need to be in a subdirectory called federalist below your working directory.
 
-```{r}
+```R
 download.file("https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip", destfile = "./federalist.zip")
 unzip("federalist.zip")
 dir("federalist")
@@ -257,7 +259,7 @@ The basic workflow from text includes:
 
 There are three packages that can be used to prepare text data in this way.
 
-```{r}
+```R
 library(quanteda)
 library(tm)
 library(tidytext)
@@ -269,7 +271,7 @@ library(tidytext)
 
 First, we indicate which documents are to be included in the corpus
 
-```{r, message = FALSE}
+```R
 library(tm)
 corpus_raw <- Corpus(DirSource(directory = "federalist", pattern = "fp"))
 corpus_raw
@@ -288,7 +290,7 @@ Common operations on a corpus of text include
 * utilizing word stems (like "politic" to include "political" and "politics")
 
 Next, we apply some operations to the texts in the corpus:
-```{r}
+```R
 corpus <- tm_map(corpus_raw, content_transformer(tolower))
 corpus <- tm_map(corpus, stripWhitespace) 
 corpus <- tm_map(corpus, removePunctuation)
@@ -299,7 +301,7 @@ corpus <- tm_map(corpus, stemDocument)
 We can create a `DocumentTermMatrix` that has one row for each document in the corpus,
 one column for each word (stem), and cell for the count of the number of times that word (stem) appears in that 
 document:
-```{r}
+```R
 dtm <- DocumentTermMatrix(corpus) # sparse form
 is.list(dtm)                      # TRUE actually
 dtm.mat <- as.matrix(dtm)         # dense form using plain matrices
@@ -311,18 +313,18 @@ dtm.Mat[1:10,1:6]
 ```
 
 To find words (stems) that are highly associated with a given word (stem), do something like
-```{r}
+```R
 findAssocs(dtm, "govern", corlimit = 0.5)
 ```
 
 We can convert `dtm` into a tidy `data.frame` with
-```{r}
+```R
 corpus_tidy <- tidy(dtm)
 ```
 
 We often weight by term frequency - inverse document frequency (tf-idf).
 We can use term-frequency inverse document frequency weighting to get a better measure of how critical a word is
-```{r}
+```R
 corpus_tidy_tfidf <- corpus_tidy %>% bind_tf_idf(term, document, count)
 corpus_tidy_tfidf
 
@@ -334,7 +336,7 @@ corpus_tidy_tfidf %>%
 ## Predicting Authorship
 
 Now we want a modified corpus that does not eliminate stopwords
-```{r}
+```R
 madison <- c(10, 14, 37:48, 58)
 corpus1 <- tm_map(corpus_raw, content_transformer(tolower))
 corpus1 <- tm_map(corpus1, stripWhitespace) 
@@ -346,7 +348,7 @@ dtm1 <- dtm1 / rowSums(dtm1) * 1000 # scale so that rows sum to 1000
 ```
 
 We can then code an outcome variable by author and predict it with the word frequency
-```{r}
+```R
 hamilton <- c(1, 6:9, 11:13, 15:17, 21:36, 59:61, 65:85)
 madison <- c(10, 14, 37:48, 58)
 
@@ -362,7 +364,7 @@ hm_fit
 ```
 
 Now we can predict the authorship of unknown Federalist Papers:
-```{r}
+```R
 disputed  <- c(49,  50:57, 62,  63)
 tf_disputed <- as.data.frame(dtm1[disputed, ])
 pred  <- predict(hm_fit, newdata = tf_disputed)
@@ -371,7 +373,7 @@ sign(pred)
 
 # Plot
 Make a plot
-```{r, message=FALSE}
+```R
 library(ggplot2)
 data.frame(nletters = nchar(colnames(dtm))) %>%
 ggplot(aes(x = nletters)) + geom_histogram(binwidth = 1) +
@@ -387,19 +389,20 @@ See also https://cran.r-project.org/web/views/WebTechnologies.html
 Another technique that is very popular is Latent Dirichlet Allocation (LDA), 
 which yields probabilities that each document falls in one of $K$ topics. 
 Every document is a mixture of $K$ topics and every topic is a mixture of words
-```{r, message = FALSE}
+
+```R
 library(topicmodels)
 data("AssociatedPress")
 ap_lda <- LDA(AssociatedPress, k = 2, control = list(seed = 1234))
 ```
 
 Probability that each word was generated by a topic (does not sum to 1)
-```{r}
+```R
 ap_topics <- tidy(ap_lda, matrix = "beta")
 ap_topics
 ```
 
-```{r}
+```R
 ap_top_terms <- ap_topics %>%
   group_by(topic) %>%
   top_n(10, beta) %>%
@@ -415,7 +418,7 @@ ap_top_terms %>%
 
 ```
 
-```{r}
+```R
 ap_topics %>%
   mutate(topic = paste0("topic", topic)) %>%
   spread(topic, beta) %>%
@@ -424,7 +427,7 @@ ap_topics %>%
 ```
 
 Document proportions (these do sum to 1 across topics)
-```{r}
+```R
 ap_documents <- tidy(ap_lda, matrix = "gamma")
 ap_documents
 filter(ap_documents, document == 1)
@@ -444,14 +447,14 @@ https://cran.r-project.org/web/packages/text2vec/vignettes/glove.html
 in the **text2vec** R package. Here is some (corrected) code from that vignette.
 
 First, we download some text data from Wikipedia
-```{r, message = FALSE}
+```R
 library(text2vec)
 download.file("http://mattmahoney.net/dc/text8.zip", destfile = "text8.zip")
 unzip("text8.zip", files = "text8")
 ```
 
 Now, read it into R and break it into tokens by whitespace:
-```{r}
+```R
 wiki <- readLines("text8", n = 1, warn = FALSE)
 tokens <- space_tokenizer(wiki)
 it <- itoken(tokens, progressbar = FALSE)
@@ -462,7 +465,7 @@ Get rid on terms that appear less than five times and create a "term-co-occurenc
 to the number of terms (left) in the vocabulary and each non-diagonal cell is
 equal to the number of times the word in row `i` and the word in column `j` appear
 within some (five, in this case) number of words of each other.
-```{r}
+```R
 vocab <- prune_vocabulary(vocab, term_count_min = 5L)
 vectorizer <- vocab_vectorizer(vocab)
 tcm <- create_tcm(it, vectorizer, skip_grams_window = 5L)
@@ -477,7 +480,8 @@ $$J = \sum_{i=1}^V \sum_{j=1}^V \max{1, \frac{X_{ij}}{x_{\mbox{max}}}}^\alpha \t
       
 where $X_{ij}$ is the co-occurance of $i$ and $j$ to represent each word as a 
 (very long) vector, $\mathbf{w}$ that is a weighted sum of some basis.
-```{r, message = FALSE}
+
+```R
 glove <- GlobalVectors$new(word_vectors_size = 50, vocabulary = vocab, x_max = 10)
 
 word_vectors_main <- glove$fit_transform(tcm, n_iter = 20) # modifies the state of glove
@@ -490,7 +494,8 @@ dim(word_vectors)
 Finally, what happens if we take the word vector for "paris", subtract the word 
 vector for "france", and add the word vector "germany"? We can compute the correlation
 (cosine similarity) between this new word vector and the closest existing word vectors.
-```{r}
+
+```R
 berlin <- word_vectors["paris", , drop = FALSE] - 
   word_vectors["france", , drop = FALSE] + 
   word_vectors["germany", , drop = FALSE]

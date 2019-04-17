@@ -3,12 +3,10 @@ title: "Text Mining Setup"
 author: "Michael Weisner"
 date: "February 14, 2019"
 output: ''
+layout: base
 ---
-This tutorial was based on the Fall 2018 Data Mining course at Columbia University lead by Ben Goodrich.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+This tutorial was based on the Fall 2018 Data Mining course at Columbia University lead by Ben Goodrich.
 
 # Packages
 
@@ -26,7 +24,15 @@ Packages for this tutorial include
 * ggplot2
 
 ## Package Installation (Optional)
-```{r package installation, eval=FALSE}
+
+```python
+import random
+
+x = 10
+random.randint(1,10)
+```
+
+```R
 # install.packages(c("tidyverse", "dplyr", "ggraph", "tidytext", "gutenbergr", "janeaustenr", "tm", "wordcloud", "topicmodels", "text2vec", "ggplot2", "quanteda"))
 ```
 
@@ -111,11 +117,11 @@ tidy_hgwells %>%
 
 # Sentiment Analysis in Text
 
-Text may have a sentiment that is easy for a human to pick up on but the sentiment of individual words is subject to negation, context, sarcasm, and other linguistic problems. 
+Text may have a sentiment that is easy for a human to pick up on but the sentiment of individual words is subject to negation, context, sarcasm, and other linguistic problems.
 
 Still, there are efforts to allow for analysis of the sentiment of text. The **tidytext** package includes a `data.frame` call `sentiments`
 
-```{r}
+```R
 sentiments
 table(sentiments$score)
 ```

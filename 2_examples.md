@@ -3,19 +3,17 @@ title: "Text Mining Examples"
 author: "Michael Weisner"
 date: "February 14, 2019"
 output: html_document
+layout: base
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ### Jane Austen Books
-```{r}
+
+```R
 library(janeaustenr)
 library(stringr)
 ```
 
-```{r}
+```R
 tidy_books <- austen_books() %>%
   group_by(book) %>%
   mutate(linenumber = row_number(),
@@ -31,7 +29,7 @@ tidy_books
 There are several sentiment analysis datasets, for example here are sentiment assignments from the [National Resource Council of Canada's Emotional Lexicon](https://www.nrc-cnrc.gc.ca/eng/solutions/advisory/emotion_lexicons.html)
 
 Let's find words that are associated with being joyful
-```{r}
+```R
 nrc_joy <- get_sentiments("nrc") %>% 
   filter(sentiment == "joy") # extract joyful words as determined by the nrc group
 
@@ -39,15 +37,17 @@ head(nrc_joy)
 ```
 
 Let's look at the sentiment of words in the book "Emma"
-```{r}
+
+```R
 tidy_books %>%
   filter(book == "Emma") %>%
   inner_join(nrc_joy) %>%
   count(word, sort = TRUE)
 ```
 
-Now let's do an inner join (so just of the words that are in both datsaets) of Emma with the Bing sentiment analysis
-```{r}
+Now let's do an inner join (so just of the words that are in both datasets) of Emma with the Bing sentiment analysis
+
+``R
 jane_austen_sentiment <- tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(book, index = linenumber %/% 80, sentiment) %>%
@@ -60,14 +60,15 @@ head(jane_austen_sentiment)
 Notice it has both negative and positive scores and a net sentiment (representing positive and negative language, for whatever that's worth).
 
 And now let's plot it
-```{r}
+
+```R
 ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~book, ncol = 2, scales = "free_x")
 ```
 
 Lastly, let's do a sentiment analysis of the most frequent words' contribution to positive and negative sentiment.
-```{r}
+```R
 tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%
@@ -87,7 +88,7 @@ tidy_books %>%
 
 ### Word Clouds
 R Also has good libraries for wod clouds (which are less useful for statistics, but fun)
-```{r}
+```R
 library(wordcloud)
 
 tidy_books %>%
@@ -98,7 +99,8 @@ tidy_books %>%
 
 We could color the words by sentiment.
 A good list of colors is available [here](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf)
-```{r}
+
+```R
 sentiment_books <- tidy_books %>%
   inner_join(get_sentiments("bing")) %>%
   count(word, sentiment, sort = TRUE) %>%

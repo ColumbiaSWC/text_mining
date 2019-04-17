@@ -3,17 +3,13 @@ title: "Process Untidy Text"
 author: "Michael Weisner"
 date: "February 14, 2019"
 output: html_document
+layout: base
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-# Processing Untidy Text in R
 
 So, what about untidy text?
 
 ## Federalist Papers Data
+
 Download the Federalist Papers data from here:
 
 [https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip](https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip)
@@ -24,7 +20,7 @@ OR
 
 The text of the Federalist Papers need to be in a subdirectory called federalist below your working directory.
 
-```{r}
+```R
 download.file("https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip", destfile = "./federalist.zip")
 unzip("federalist.zip")
 dir("federalist")
@@ -45,11 +41,12 @@ The basic workflow from text includes:
 
 First, we indicate which documents are to be included in the corpus
 
-```{r, message = FALSE}
+```R
 library(tm)
 corpus_raw <- Corpus(DirSource(directory = "federalist", pattern = "fp"))
 corpus_raw
 ```
+
 In this case, there are 85 documents total. Text analysis often works with a much larger
 set of documents.
 
@@ -64,7 +61,7 @@ Common operations on a corpus of text include
 * utilizing word stems (like "politic" to include "political" and "politics")
 
 Next, we apply some operations to the texts in the corpus:
-```{r}
+```R
 corpus <- tm_map(corpus_raw, content_transformer(tolower))
 corpus <- tm_map(corpus, stripWhitespace) 
 corpus <- tm_map(corpus, removePunctuation)
@@ -75,7 +72,7 @@ corpus <- tm_map(corpus, stemDocument)
 We can create a `DocumentTermMatrix` that has one row for each document in the corpus,
 one column for each word (stem), and cell for the count of the number of times that word (stem) appears in that 
 document:
-```{r}
+```R
 dtm <- DocumentTermMatrix(corpus) # sparse form
 is.list(dtm)                      # TRUE actually
 dtm.mat <- as.matrix(dtm)         # dense form using plain matrices
@@ -87,18 +84,18 @@ dtm.Mat[1:10,1:6]
 ```
 
 To find words (stems) that are highly associated with a given word (stem), do something like
-```{r}
+```R
 findAssocs(dtm, "govern", corlimit = 0.5)
 ```
 
 We can convert `dtm` into a tidy `data.frame` with
-```{r}
+```R
 corpus_tidy <- tidy(dtm)
 ```
 
 We often weight by term frequency - inverse document frequency (tf-idf).
 We can use term-frequency inverse document frequency weighting to get a better measure of how critical a word is
-```{r}
+```R
 corpus_tidy_tfidf <- corpus_tidy %>% bind_tf_idf(term, document, count)
 corpus_tidy_tfidf
 
@@ -110,7 +107,8 @@ corpus_tidy_tfidf %>%
 ## Predicting Authorship
 
 Now we want a modified corpus that does not eliminate stopwords
-```{r}
+
+```R
 madison <- c(10, 14, 37:48, 58)
 corpus1 <- tm_map(corpus_raw, content_transformer(tolower))
 corpus1 <- tm_map(corpus1, stripWhitespace) 
@@ -122,7 +120,8 @@ dtm1 <- dtm1 / rowSums(dtm1) * 1000 # scale so that rows sum to 1000
 ```
 
 We can then code an outcome variable by author and predict it with the word frequency
-```{r}
+
+```R
 hamilton <- c(1, 6:9, 11:13, 15:17, 21:36, 59:61, 65:85)
 madison <- c(10, 14, 37:48, 58)
 
@@ -138,7 +137,8 @@ hm_fit
 ```
 
 Now we can predict the authorship of unknown Federalist Papers:
-```{r}
+
+```R
 disputed  <- c(49,  50:57, 62,  63)
 tf_disputed <- as.data.frame(dtm1[disputed, ])
 pred  <- predict(hm_fit, newdata = tf_disputed)
@@ -146,8 +146,10 @@ sign(pred)
 ```
 
 # Plot
+
 Make a plot
-```{r, message=FALSE}
+
+```R
 library(ggplot2)
 data.frame(nletters = nchar(colnames(dtm))) %>%
 ggplot(aes(x = nletters)) + geom_histogram(binwidth = 1) +

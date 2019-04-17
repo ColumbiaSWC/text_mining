@@ -1,0 +1,18 @@
+
+
+<html>
+  <head>
+  {% if page.title %}
+    <title>{{ page.title }} | Text Mining in R</title>
+    {% else %}
+    <title>Text Mining in R</title>
+  {% endif %}
+    {% include css-links.html %}
+  </head>
+  <body>
+    {% include header.html %}
+
+
+    {{ content }}
+  </body>
+  
