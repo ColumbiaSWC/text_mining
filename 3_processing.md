@@ -10,13 +10,7 @@ So, what about untidy text?
 
 ## Federalist Papers Data
 
-Download the Federalist Papers data from here:
-
-[https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip](https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip)
-
-OR
-
-[goo.gl/y5v6bx](goo.gl/y5v6bx)
+Download the Federalist Papers data from [here](https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip).
 
 The text of the Federalist Papers need to be in a subdirectory called federalist below your working directory.
 
