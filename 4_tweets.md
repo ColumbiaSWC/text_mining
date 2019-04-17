@@ -10,6 +10,8 @@ This tutorial is heavily based on the tutorial written by Leah Wasser and Carson
 
 # Searching for Tweets Related to Climate
 
+## Packages
+
 ```R
 # load twitter library - the rtweet library is recommended now over twitteR
 library(rtweet)
@@ -23,14 +25,128 @@ library(igraph)
 library(ggraph)
 ```
 
+
+## How to get data with Twitter API
 ```R
-climate_tweets <- search_tweets(q = "#climatechange", n = 10000,
-                                      lang = "en",
-                                      include_rts = FALSE)
-save_as_csv(x = climate_tweets, "climate_tweets.csv", prepend_ids = TRUE, na = "NA",
-  fileEncoding = "UTF-8")
+#climate_tweets <- search_tweets(q = "#climatechange", n = 10000,
+#                                      lang = "en",
+#                                      include_rts = FALSE)
+#save_as_csv(x = climate_tweets, "climate_tweets.csv", prepend_ids = TRUE, na = "NA",
+#  fileEncoding = "UTF-8")
+```
+
+## Pre-found tweets about Climate Change
+```R
+climate_tweets <- read_csv("./climate_tweets.csv")
+head(climate_tweets$text)
+```
+
+# Cleaning Tweets
+```R
+# remove urls tidyverse is failing here for some reason
+#climate_tweets <- climate_tweets %>%
+#  mutate_at(c("stripped_text"), gsub("http.*","",.))
+
+ climate_tweets$stripped_text <- gsub("http.*","",  climate_tweets$text)
+ climate_tweets$stripped_text <- gsub("https.*","", climate_tweets$stripped_text)
+```
+
+## Unnest tokens with stripped text
+```R
+# remove punctuation, convert to lowercase, add id for each tweet!
+climate_tweets_clean <- climate_tweets %>%
+  dplyr::select(stripped_text) %>%
+  unnest_tokens(word, stripped_text)
 ```
 
 
+## Remove Stop Words
 
+Just so it's clear, here's what the top 15 words would be if we don't remove stop words.
 
+```R
+climate_tweets_clean %>%
+  count(word, sort = TRUE) %>%
+  top_n(15) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+      labs(x = "Count",
+      y = "Unique words",
+      title = "Count of unique words found in tweets")
+```
+
+Let's see how many words are in the data already based on the number of rows
+
+```R
+nrow(climate_tweets_clean)
+```
+
+Now let's load the stop_words `tidytext()` package and remove them from our data.
+
+```R
+# load list of stop words - from the tidytext package
+data("stop_words")
+
+# remove stop words from your list of words
+cleaned_tweet_words <- climate_tweets_clean %>%
+  anti_join(stop_words)
+```
+
+There should now be fewer words
+```R
+# there should be fewer words now
+nrow(cleaned_tweet_words)
+```
+
+Let's plot the top 15 words
+```R
+# plot the top 15 words
+cleaned_tweet_words %>%
+  count(word, sort = TRUE) %>%
+  top_n(15) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+      labs(x = "Count",
+      y = "Unique words",
+      title = "Count of unique words found in tweets")
+```
+
+# Networks of Words (ngrams)
+
+ngrams specifies pairs and 2 is the number of words together
+
+```{r}
+# library(devtools)
+# install_github("dgrtwo/widyr")
+library(widyr)
+
+# remove punctuation, convert to lowercase, add id for each tweet!
+climate_tweets_paired_words <- climate_tweets %>%
+  dplyr::select(stripped_text) %>%
+  unnest_tokens(paired_words, stripped_text, token = "ngrams", n = 2)
+
+climate_tweets_paired_words %>%
+  count(paired_words, sort = TRUE)
+```
+
+```{r}
+library(tidyr)
+climate_tweets_separated_words <- climate_tweets_paired_words %>%
+  separate(paired_words, c("word1", "word2"), sep = " ")
+
+climate_tweets_filtered <- climate_tweets_separated_words %>%
+  filter(!word1 %in% stop_words$word) %>%
+  filter(!word2 %in% stop_words$word)
+
+# new bigram counts:
+climate_words_counts <- climate_tweets_filtered %>%
+  count(word1, word2, sort = TRUE)
+
+head(climate_words_counts)
+```
