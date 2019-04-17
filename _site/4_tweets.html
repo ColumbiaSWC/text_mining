@@ -1,0 +1,74 @@
+
+
+<html>
+  <head>
+  
+    <title>Tweet Text Mining | Text Mining in R</title>
+    
+       <link rel="stylesheet" href="css/styles.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-dark.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-light.css" type="text/css">    
+
+  </head>
+  <body>
+    
+
+
+<div class="banner">
+  <h1 style="font-size:3rem";>Text Mining in R</h1>
+
+  <nav class="nav">
+    <a href="about">About</a>
+    <a href="contents">Contents</a>    
+
+  <hr>
+
+  
+  <h1>Tweet Text Mining</h1>
+  
+
+</div>
+
+
+
+
+    <p>This tutorial is heavily based on the tutorial written by Leah Wasser and Carson Farmer, <a href="here">https://www.earthdatascience.org/courses/earth-analytics/get-data-using-apis/text-mining-twitter-data-intro-r/</a>.</p>
+
+<h1 id="searching-for-tweets-related-to-climate">Searching for Tweets Related to Climate</h1>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="c1"># load twitter library - the rtweet library is recommended now over twitteR
+</span><span class="n">library</span><span class="p">(</span><span class="n">rtweet</span><span class="p">)</span><span class="w">
+</span><span class="c1"># plotting and pipes - tidyverse!
+</span><span class="n">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="c1"># text mining library
+</span><span class="n">library</span><span class="p">(</span><span class="n">tidytext</span><span class="p">)</span><span class="w">
+</span><span class="c1"># plotting packages
+</span><span class="n">library</span><span class="p">(</span><span class="n">igraph</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">ggraph</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">climate_tweets</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">search_tweets</span><span class="p">(</span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#climatechange"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10000</span><span class="p">,</span><span class="w">
+                                      </span><span class="n">lang</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"en"</span><span class="p">,</span><span class="w">
+                                      </span><span class="n">include_rts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">save_as_csv</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">climate_tweets</span><span class="p">,</span><span class="w"> </span><span class="s2">"climate_tweets.csv"</span><span class="p">,</span><span class="w"> </span><span class="n">prepend_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">,</span><span class="w"> </span><span class="n">na</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"NA"</span><span class="p">,</span><span class="w">
+  </span><span class="n">fileEncoding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"UTF-8"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+
+
+    
+<div class="nav" style="margin-top: 3em">
+<div style="text-align:center">§</div>
+<p style="text-align: center">
+<a href="https://cupop.columbia.edu/)">Columbia Population Research Center</a>
+<br>
+<a href="https://rcfoundations.research.columbia.edu/">Foundations for Research Computing</a>
+</p>
+</div>
+    
+
+  </body>
+  

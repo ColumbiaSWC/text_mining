@@ -1,0 +1,169 @@
+
+
+<html>
+  <head>
+  
+    <title>Text Mining Setup | Text Mining in R</title>
+    
+       <link rel="stylesheet" href="css/styles.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-dark.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-light.css" type="text/css">    
+
+  </head>
+  <body>
+    
+
+
+<div class="banner">
+  <h1 style="font-size:3rem";>Text Mining in R</h1>
+
+  <nav class="nav">
+    <a href="about">About</a>
+    <a href="contents">Contents</a>    
+
+  <hr>
+
+  
+  <h1>Text Mining Setup</h1>
+  
+
+</div>
+
+
+
+
+    <p>This tutorial was based on the Fall 2018 Data Mining course at Columbia University lead by Ben Goodrich.</p>
+
+<h1 id="packages">Packages</h1>
+
+<p>Packages for this tutorial include</p>
+
+<ul>
+  <li>tidyverse</li>
+  <li>tidytext</li>
+  <li>dplyr</li>
+  <li>gutenbergr</li>
+  <li>janeaustenr</li>
+  <li>wordcloud</li>
+  <li>tm</li>
+  <li>topicmodels</li>
+  <li>text2vec</li>
+  <li>ggplot2</li>
+</ul>
+
+<h2 id="package-installation-optional">Package Installation (Optional)</h2>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">random</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="c1"># install.packages(c("tidyverse", "dplyr", "ggraph", "tidytext", "gutenbergr", "janeaustenr", "tm", "wordcloud", "topicmodels", "text2vec", "ggplot2", "quanteda"))
+</span></code></pre>
+</div>
+
+<h2 id="basic-packages-to-load">Basic Packages to Load</h2>
+<p>```{r basic packages}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+
+# Tidy Text
+
+In general, a "tidy" `data.frame`, which is what we will use for R text analysis, has
+
+* One "observation" per row
+* Each column is a variable
+* Each type of observational unit can be represented as a table
+
+Which can be seen in the images below:
+
+![Source: https://r4ds.had.co.nz/tidy-data.html](tidy-1.png)
+
+When applied to text data, "tidy" means a table with one "token" per row, where a "token" can be a single word or set of adjacent words. The main strength of this approach is that it integrates well with the rest of the packages in the **tidyverse**.
+
+Non-tidy approaches (that can be made tidy) to text include
+
+* Character vectors
+* Corpora with additional metadata
+* Document-term matrices
+
+
+## Ways to Break Up Text Data
+The `unnest_tokens` function in the **tidytext** package can parse words, sentences, paragraphs, and more into tokens, in which is removes punctuation and converts to lowercase.
+
+### Tidytext Examples:
+
+Fundamentally you can break up your units of textual analysis by words, word pairs, sentences, paragraphs, chapters, etc.
+```{r}
+library(tidytext)
+example(unnest_tokens)
+</code></pre>
+</div>
+
+<h1 id="preparing-tidy-text-data">Preparing Tidy Text Data</h1>
+<h2 id="stop-words">Stop Words</h2>
+
+<h3 id="joins-and-anti-joins">Joins and Anti Joins</h3>
+
+<p>The <strong>tidyverse</strong> also uses some database-style logic in order to merge <code class="highlighter-rouge">data.frame</code>s together.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">left_join</code> returns all rows of the first <code class="highlighter-rouge">data.frame</code> when merged with another <code class="highlighter-rouge">data.frame</code>.</li>
+  <li><code class="highlighter-rouge">inner_join</code> is like a <code class="highlighter-rouge">left_join</code> but only keeps rows that match between the two <code class="highlighter-rouge">data.frame</code>s according to the columns in <code class="highlighter-rouge">by</code> that define a key.</li>
+  <li><code class="highlighter-rouge">outer_join</code> keeps all the rows that appear in either of the two <code class="highlighter-rouge">data.frame</code>s.</li>
+  <li><code class="highlighter-rouge">anti_join</code> drops all the observations from the first <code class="highlighter-rouge">data.frame</code> that match with the second <code class="highlighter-rouge">data.frame</code>.</li>
+</ul>
+
+<p>To eliminate stop words we can do so with an <code class="highlighter-rouge">anti_join</code>:</p>
+
+<pre><code class="language-{r}">library(gutenbergr)
+hgwells &lt;- gutenberg_download(c(35, 36, 5230, 159)) # Books by H.G. Wells
+
+tidy_hgwells_stop &lt;- hgwells %&gt;%
+  unnest_tokens(word, text)
+tidy_hgwells_stop
+</code></pre>
+
+<h3 id="remove-stopwords">Remove Stopwords</h3>
+<pre><code class="language-{r}">tidy_hgwells &lt;- tidy_hgwells_stop %&gt;% 
+  anti_join(stop_words)
+tidy_hgwells
+</code></pre>
+
+<h3 id="sort-by-frequency">Sort By Frequency</h3>
+<pre><code class="language-{r}">tidy_hgwells %&gt;%
+  count(word, sort = TRUE)
+</code></pre>
+
+<h1 id="sentiment-analysis-in-text">Sentiment Analysis in Text</h1>
+
+<p>Text may have a sentiment that is easy for a human to pick up on but the sentiment of individual words is subject to negation, context, sarcasm, and other linguistic problems.</p>
+
+<p>Still, there are efforts to allow for analysis of the sentiment of text. The <strong>tidytext</strong> package includes a <code class="highlighter-rouge">data.frame</code> call <code class="highlighter-rouge">sentiments</code></p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">sentiments</span><span class="w">
+</span><span class="n">table</span><span class="p">(</span><span class="n">sentiments</span><span class="o">$</span><span class="n">score</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>These are scored by three different sets of researchers. We can then <code class="highlighter-rouge">left_join</code> a tidy <code class="highlighter-rouge">data.frame</code> of texts with the <code class="highlighter-rouge">sentiments</code> <code class="highlighter-rouge">data.frame</code> to investigate whether the words used tend to be negative or positive, for example using the books writen by Jane Austen.</p>
+
+
+
+    
+<div class="nav" style="margin-top: 3em">
+<div style="text-align:center">§</div>
+<p style="text-align: center">
+<a href="https://cupop.columbia.edu/)">Columbia Population Research Center</a>
+<br>
+<a href="https://rcfoundations.research.columbia.edu/">Foundations for Research Computing</a>
+</p>
+</div>
+    
+
+  </body>
+  

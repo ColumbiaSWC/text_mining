@@ -55,8 +55,7 @@ jane_austen_sentiment <- tidy_books %>%
   mutate(sentiment = positive - negative)
 
 head(jane_austen_sentiment)
-```
-
+```R
 Notice it has both negative and positive scores and a net sentiment (representing positive and negative language, for whatever that's worth).
 
 And now let's plot it

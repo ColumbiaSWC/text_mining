@@ -69,7 +69,7 @@ bower_components
 
 # Output folders
 dist
-_site
+# _site
 .jekyll-metadata
 
 # hide the AWS and Rsync credentials file

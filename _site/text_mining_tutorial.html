@@ -1,0 +1,500 @@
+<p>This tutorial was based on the Fall 2018 Data Mining course at Columbia University lead by Ben Goodrich.</p>
+
+<h1 id="packages">Packages</h1>
+
+<p>Packages for this tutorial include</p>
+
+<ul>
+  <li>tidyverse</li>
+  <li>tidytext</li>
+  <li>dplyr</li>
+  <li>gutenbergr</li>
+  <li>janeaustenr</li>
+  <li>wordcloud</li>
+  <li>tm</li>
+  <li>topicmodels</li>
+  <li>text2vec</li>
+  <li>ggplot2</li>
+</ul>
+
+<h2 id="package-installation-optional">Package Installation (Optional)</h2>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="c1"># install.packages(c("tidyverse", "dplyr", "ggraph", "tidytext", "gutenbergr", "janeaustenr", "tm", "wordcloud", "topicmodels", "text2vec", "ggplot2", "quanteda"))
+</span></code></pre>
+</div>
+
+<h2 id="basic-packages-to-load">Basic Packages to Load</h2>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="tidy-text">Tidy Text</h1>
+
+<p>In general, a “tidy” <code class="highlighter-rouge">data.frame</code>, which is what we will use for R text analysis, has</p>
+
+<ul>
+  <li>One “observation” per row</li>
+  <li>Each column is a variable</li>
+  <li>Each type of observational unit can be represented as a table</li>
+</ul>
+
+<p>Which can be seen in the images below:</p>
+
+<p><img src="tidy-1.png" alt="Source: https://r4ds.had.co.nz/tidy-data.html" /></p>
+
+<p>When applied to text data, “tidy” means a table with one “token” per row, where a “token” can be a single word or set of adjacent words. The main strength of this approach is that it integrates well with the rest of the packages in the <strong>tidyverse</strong>.</p>
+
+<p>Non-tidy approaches (that can be made tidy) to text include</p>
+
+<ul>
+  <li>Character vectors</li>
+  <li>Corpora with additional metadata</li>
+  <li>Document-term matrices</li>
+</ul>
+
+<h2 id="ways-to-break-up-text-data">Ways to Break Up Text Data</h2>
+<p>The <code class="highlighter-rouge">unnest_tokens</code> function in the <strong>tidytext</strong> package can parse words, sentences, paragraphs, and more into tokens, in which is removes punctuation and converts to lowercase.</p>
+
+<h3 id="examples">Examples:</h3>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">tidytext</span><span class="p">)</span><span class="w">
+</span><span class="n">example</span><span class="p">(</span><span class="n">unnest_tokens</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="preparing-tidy-text-data">Preparing Tidy Text Data</h1>
+<h2 id="stop-words">Stop Words</h2>
+
+<h3 id="joins-and-anti-joins">Joins and Anti Joins</h3>
+
+<p>The <strong>tidyverse</strong> also uses some database-style logic in order to merge <code class="highlighter-rouge">data.frame</code>s together.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">left_join</code> returns all rows of the first <code class="highlighter-rouge">data.frame</code> when merged with another <code class="highlighter-rouge">data.frame</code>.</li>
+  <li><code class="highlighter-rouge">inner_join</code> is like a <code class="highlighter-rouge">left_join</code> but only keeps rows that match between the two <code class="highlighter-rouge">data.frame</code>s according to the columns in <code class="highlighter-rouge">by</code> that define a key.</li>
+  <li><code class="highlighter-rouge">outer_join</code> keeps all the rows that appear in either of the two <code class="highlighter-rouge">data.frame</code>s.</li>
+  <li><code class="highlighter-rouge">anti_join</code> drops all the observations from the first <code class="highlighter-rouge">data.frame</code> that match with the second <code class="highlighter-rouge">data.frame</code>.</li>
+</ul>
+
+<p>To eliminate stop words we can do so with an <code class="highlighter-rouge">anti_join</code>:</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">gutenbergr</span><span class="p">)</span><span class="w">
+</span><span class="n">hgwells</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">gutenberg_download</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">35</span><span class="p">,</span><span class="w"> </span><span class="m">36</span><span class="p">,</span><span class="w"> </span><span class="m">5230</span><span class="p">,</span><span class="w"> </span><span class="m">159</span><span class="p">))</span><span class="w"> </span><span class="c1"># Books by H.G. Wells
+</span><span class="w">
+</span><span class="n">tidy_hgwells_stop</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">hgwells</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">unnest_tokens</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w">
+</span><span class="n">tidy_hgwells_stop</span><span class="w">
+</span></code></pre>
+</div>
+
+<h3 id="remove-stopwords">Remove Stopwords</h3>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_hgwells</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy_hgwells_stop</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> 
+  </span><span class="n">anti_join</span><span class="p">(</span><span class="n">stop_words</span><span class="p">)</span><span class="w">
+</span><span class="n">tidy_hgwells</span><span class="w">
+</span></code></pre>
+</div>
+
+<h3 id="sort-by-frequency">Sort By Frequency</h3>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_hgwells</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="sentiment-analysis-in-text">Sentiment Analysis in Text</h1>
+
+<p>Text may have a sentiment that is easy for a human to pick up on but the sentiment of individual words is subject to negation, context, sarcasm, and other linguistic problems.</p>
+
+<p>Still, there are efforts to allow for analysis of the sentiment of text. The <strong>tidytext</strong> package includes a <code class="highlighter-rouge">data.frame</code> call <code class="highlighter-rouge">sentiments</code></p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">sentiments</span><span class="w">
+</span><span class="n">table</span><span class="p">(</span><span class="n">sentiments</span><span class="o">$</span><span class="n">score</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>These are scored by three different sets of researchers. We can then <code class="highlighter-rouge">left_join</code> a tidy <code class="highlighter-rouge">data.frame</code> of texts with the <code class="highlighter-rouge">sentiments</code> <code class="highlighter-rouge">data.frame</code> to investigate whether the words used tend to be negative or positive, for example using the books writen by Jane Austen:</p>
+
+<h3 id="jane-austen-books">Jane Austen Books</h3>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">janeaustenr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">stringr</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">austen_books</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">group_by</span><span class="p">(</span><span class="n">book</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">linenumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row_number</span><span class="p">(),</span><span class="w">
+         </span><span class="n">chapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">cumsum</span><span class="p">(</span><span class="n">str_detect</span><span class="p">(</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">regex</span><span class="p">(</span><span class="s2">"^chapter [\\divxlc]"</span><span class="p">,</span><span class="w"> </span><span class="n">ignore_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">))))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">unnest_tokens</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w">
+
+</span><span class="n">tidy_books</span><span class="w">
+</span></code></pre>
+</div>
+
+<h3 id="sentiment">Sentiment</h3>
+
+<p>There are several sentiment analysis datasets, for example here are sentiment assignments from the <a href="https://www.nrc-cnrc.gc.ca/eng/solutions/advisory/emotion_lexicons.html">National Resource Council of Canada’s Emotional Lexicon</a></p>
+
+<p>Let’s find words that are associated with being joyful</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">nrc_joy</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"nrc"</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> 
+  </span><span class="n">filter</span><span class="p">(</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"joy"</span><span class="p">)</span><span class="w"> </span><span class="c1"># extract joyful words as determined by the nrc group
+</span><span class="w">
+</span><span class="n">head</span><span class="p">(</span><span class="n">nrc_joy</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Let’s look at the sentiment of words in the book “Emma”</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">filter</span><span class="p">(</span><span class="n">book</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Emma"</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">nrc_joy</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Now let’s do an inner join (so just of the words that are in both datsaets) of Emma with the Bing sentiment analysis</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">jane_austen_sentiment</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"bing"</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">book</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linenumber</span><span class="w"> </span><span class="o">%/%</span><span class="w"> </span><span class="m">80</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">spread</span><span class="p">(</span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">sentiment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">positive</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">negative</span><span class="p">)</span><span class="w">
+
+</span><span class="n">head</span><span class="p">(</span><span class="n">jane_austen_sentiment</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Notice it has both negative and positive scores and a net sentiment (representing positive and negative language, for whatever that’s worth).</p>
+
+<p>And now let’s plot it</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">ggplot</span><span class="p">(</span><span class="n">jane_austen_sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">book</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_col</span><span class="p">(</span><span class="n">show.legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span><span class="n">book</span><span class="p">,</span><span class="w"> </span><span class="n">ncol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">scales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"free_x"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Lastly, let’s do a sentiment analysis of the most frequent words’ contribution to positive and negative sentiment.</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"bing"</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">group_by</span><span class="p">(</span><span class="n">sentiment</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">top_n</span><span class="p">(</span><span class="m">10</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reorder</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ggplot</span><span class="p">(</span><span class="n">aes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sentiment</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_col</span><span class="p">(</span><span class="n">show.legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">scales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"free_y"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Contribution to sentiment"</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NULL</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">coord_flip</span><span class="p">()</span><span class="w">  
+</span></code></pre>
+</div>
+
+<h3 id="word-clouds">Word Clouds</h3>
+<p>R Also has good libraries for wod clouds (which are less useful for statistics, but fun)</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">)</span><span class="w">
+
+</span><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">anti_join</span><span class="p">(</span><span class="n">stop_words</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">with</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">max.words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>We could color the words by sentiment.
+A good list of colors is available <a href="http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf">here</a></p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">sentiment_books</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"bing"</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reorder</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">))</span><span class="w">
+
+</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">nrow</span><span class="p">(</span><span class="n">sentiment_books</span><span class="p">)</span><span class="w">
+</span><span class="n">colors</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="s2">"grey"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w">
+</span><span class="n">colors</span><span class="p">[</span><span class="n">sentiment_books</span><span class="o">$</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"negative"</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"coral2"</span><span class="w">
+</span><span class="n">colors</span><span class="p">[</span><span class="n">sentiment_books</span><span class="o">$</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"positive"</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w">  </span><span class="s2">"cyan3"</span><span class="w">
+
+</span><span class="n">sentiment_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+</span><span class="n">with</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">colors</span><span class="p">,</span><span class="w"> </span><span class="n">max.words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="processing-untidy-text-in-r">Processing Untidy Text in R</h1>
+
+<h2 id="federalist-papers-data">Federalist Papers Data</h2>
+<p>Download the Federalist Papers data from here:</p>
+
+<p><a href="https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip">https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip</a></p>
+
+<p>OR</p>
+
+<p><a href="goo.gl/y5v6bx">goo.gl/y5v6bx</a></p>
+
+<p>The text of the Federalist Papers need to be in a subdirectory called federalist below your working directory.</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">download.file</span><span class="p">(</span><span class="s2">"https://github.com/mdweisner/textmining_workshop/raw/master/federalist.zip"</span><span class="p">,</span><span class="w"> </span><span class="n">destfile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./federalist.zip"</span><span class="p">)</span><span class="w">
+</span><span class="n">unzip</span><span class="p">(</span><span class="s2">"federalist.zip"</span><span class="p">)</span><span class="w">
+</span><span class="n">dir</span><span class="p">(</span><span class="s2">"federalist"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>You should now have a folder called federalist in your working directory.</p>
+
+<h2 id="basics-of-text-processing">Basics of Text Processing</h2>
+
+<p>The basic workflow from text includes:</p>
+
+<ol>
+  <li>Convert your text data, format it into a corpus, which is a special collection of text documents</li>
+  <li>Clean the corpus (remove whitespace, convert to lowercase, remove stop words, reduce to wordstems)</li>
+  <li>Create a Document-Term Matrix (DTM) from the corpus</li>
+  <li>Conduct Analysis</li>
+</ol>
+
+<h2 id="quanteda-tm-tidytext">quanteda, tm, tidytext</h2>
+
+<p>There are three packages that can be used to prepare text data in this way.</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">quanteda</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">tidytext</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h2 id="corpus--corpora">Corpus &amp; Corpora</h2>
+
+<p>First, we indicate which documents are to be included in the corpus</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus_raw</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">Corpus</span><span class="p">(</span><span class="n">DirSource</span><span class="p">(</span><span class="n">directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"federalist"</span><span class="p">,</span><span class="w"> </span><span class="n">pattern</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"fp"</span><span class="p">))</span><span class="w">
+</span><span class="n">corpus_raw</span><span class="w">
+</span></code></pre>
+</div>
+<p>In this case, there are 85 documents total. Text analysis often works with a much larger
+set of documents.</p>
+
+<p>Text analysis usually analyzes words or phrases without regard to sentence or paragraph structure
+Common operations on a corpus of text include</p>
+
+<ul>
+  <li>making everything lowercase</li>
+  <li>removing extra whitespace</li>
+  <li>removing punctuation</li>
+  <li>removing numbers</li>
+  <li>removing stop words (like “the”, which are common but useless)</li>
+  <li>utilizing word stems (like “politic” to include “political” and “politics”)</li>
+</ul>
+
+<p>Next, we apply some operations to the texts in the corpus:</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus_raw</span><span class="p">,</span><span class="w"> </span><span class="n">content_transformer</span><span class="p">(</span><span class="n">tolower</span><span class="p">))</span><span class="w">
+</span><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span><span class="w"> </span><span class="n">stripWhitespace</span><span class="p">)</span><span class="w"> 
+</span><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span><span class="w"> </span><span class="n">removePunctuation</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span><span class="w"> </span><span class="n">removeNumbers</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span><span class="w"> </span><span class="n">removeWords</span><span class="p">,</span><span class="w"> </span><span class="n">stopwords</span><span class="p">(</span><span class="s2">"english"</span><span class="p">))</span><span class="w">
+</span><span class="n">corpus</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span><span class="w"> </span><span class="n">stemDocument</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+<p>We can create a <code class="highlighter-rouge">DocumentTermMatrix</code> that has one row for each document in the corpus,
+one column for each word (stem), and cell for the count of the number of times that word (stem) appears in that 
+document:</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">dtm</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">DocumentTermMatrix</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span><span class="w"> </span><span class="c1"># sparse form
+</span><span class="nf">is.list</span><span class="p">(</span><span class="n">dtm</span><span class="p">)</span><span class="w">                      </span><span class="c1"># TRUE actually
+</span><span class="n">dtm.mat</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.matrix</span><span class="p">(</span><span class="n">dtm</span><span class="p">)</span><span class="w">         </span><span class="c1"># dense form using plain matrices
+</span><span class="n">library</span><span class="p">(</span><span class="n">Matrix</span><span class="p">)</span><span class="w">                   </span><span class="c1"># sparse form using the Matrix package
+</span><span class="n">dtm.Mat</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sparseMatrix</span><span class="p">(</span><span class="n">dtm</span><span class="o">$</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">dtm</span><span class="o">$</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dtm</span><span class="o">$</span><span class="n">v</span><span class="p">,</span><span class="w"> 
+                        </span><span class="n">dims</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="n">dtm</span><span class="o">$</span><span class="n">nrow</span><span class="p">,</span><span class="w"> </span><span class="n">dtm</span><span class="o">$</span><span class="n">ncol</span><span class="p">),</span><span class="w"> 
+                        </span><span class="n">dimnames</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dtm</span><span class="o">$</span><span class="n">dimnames</span><span class="p">)</span><span class="w">
+</span><span class="n">dtm.Mat</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="p">,</span><span class="m">1</span><span class="o">:</span><span class="m">6</span><span class="p">]</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>To find words (stems) that are highly associated with a given word (stem), do something like</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">findAssocs</span><span class="p">(</span><span class="n">dtm</span><span class="p">,</span><span class="w"> </span><span class="s2">"govern"</span><span class="p">,</span><span class="w"> </span><span class="n">corlimit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0.5</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>We can convert <code class="highlighter-rouge">dtm</code> into a tidy <code class="highlighter-rouge">data.frame</code> with</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">corpus_tidy</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy</span><span class="p">(</span><span class="n">dtm</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>We often weight by term frequency - inverse document frequency (tf-idf).
+We can use term-frequency inverse document frequency weighting to get a better measure of how critical a word is</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">corpus_tidy_tfidf</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">corpus_tidy</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">bind_tf_idf</span><span class="p">(</span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">document</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus_tidy_tfidf</span><span class="w">
+
+</span><span class="n">corpus_tidy_tfidf</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">select</span><span class="p">(</span><span class="o">-</span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">arrange</span><span class="p">(</span><span class="n">desc</span><span class="p">(</span><span class="n">tf_idf</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<h2 id="predicting-authorship">Predicting Authorship</h2>
+
+<p>Now we want a modified corpus that does not eliminate stopwords</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">madison</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">14</span><span class="p">,</span><span class="w"> </span><span class="m">37</span><span class="o">:</span><span class="m">48</span><span class="p">,</span><span class="w"> </span><span class="m">58</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus_raw</span><span class="p">,</span><span class="w"> </span><span class="n">content_transformer</span><span class="p">(</span><span class="n">tolower</span><span class="p">))</span><span class="w">
+</span><span class="n">corpus1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus1</span><span class="p">,</span><span class="w"> </span><span class="n">stripWhitespace</span><span class="p">)</span><span class="w"> 
+</span><span class="n">corpus1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus1</span><span class="p">,</span><span class="w"> </span><span class="n">removePunctuation</span><span class="p">)</span><span class="w">
+</span><span class="n">corpus1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tm_map</span><span class="p">(</span><span class="n">corpus1</span><span class="p">,</span><span class="w"> </span><span class="n">removeNumbers</span><span class="p">)</span><span class="w">
+
+</span><span class="n">dtm1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.matrix</span><span class="p">(</span><span class="n">DocumentTermMatrix</span><span class="p">(</span><span class="n">corpus1</span><span class="p">))</span><span class="w">
+</span><span class="n">dtm1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">dtm1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">rowSums</span><span class="p">(</span><span class="n">dtm1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="c1"># scale so that rows sum to 1000
+</span></code></pre>
+</div>
+
+<p>We can then code an outcome variable by author and predict it with the word frequency</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">hamilton</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">6</span><span class="o">:</span><span class="m">9</span><span class="p">,</span><span class="w"> </span><span class="m">11</span><span class="o">:</span><span class="m">13</span><span class="p">,</span><span class="w"> </span><span class="m">15</span><span class="o">:</span><span class="m">17</span><span class="p">,</span><span class="w"> </span><span class="m">21</span><span class="o">:</span><span class="m">36</span><span class="p">,</span><span class="w"> </span><span class="m">59</span><span class="o">:</span><span class="m">61</span><span class="p">,</span><span class="w"> </span><span class="m">65</span><span class="o">:</span><span class="m">85</span><span class="p">)</span><span class="w">
+</span><span class="n">madison</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">14</span><span class="p">,</span><span class="w"> </span><span class="m">37</span><span class="o">:</span><span class="m">48</span><span class="p">,</span><span class="w"> </span><span class="m">58</span><span class="p">)</span><span class="w">
+
+</span><span class="n">author</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="kc">NA</span><span class="p">,</span><span class="w"> </span><span class="n">nrow</span><span class="p">(</span><span class="n">dtm1</span><span class="p">))</span><span class="w">
+</span><span class="n">author</span><span class="p">[</span><span class="n">hamilton</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="c1"># 1 if Hamilton
+</span><span class="n">author</span><span class="p">[</span><span class="n">madison</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">-1</span><span class="w"> </span><span class="c1"># -1 if Madison
+## training set data
+</span><span class="n">train</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="n">author</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">author</span><span class="p">[</span><span class="nf">c</span><span class="p">(</span><span class="n">hamilton</span><span class="p">,</span><span class="w"> </span><span class="n">madison</span><span class="p">)],</span><span class="w">
+                    </span><span class="n">dtm1</span><span class="p">[</span><span class="nf">c</span><span class="p">(</span><span class="n">hamilton</span><span class="p">,</span><span class="w"> </span><span class="n">madison</span><span class="p">),</span><span class="w"> </span><span class="p">])</span><span class="w">
+</span><span class="c1">## fit linear model
+</span><span class="n">hm_fit</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lm</span><span class="p">(</span><span class="n">author</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">upon</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">there</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">consequently</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">whilst</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w">
+</span><span class="n">hm_fit</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Now we can predict the authorship of unknown Federalist Papers:</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">disputed</span><span class="w">  </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">49</span><span class="p">,</span><span class="w">  </span><span class="m">50</span><span class="o">:</span><span class="m">57</span><span class="p">,</span><span class="w"> </span><span class="m">62</span><span class="p">,</span><span class="w">  </span><span class="m">63</span><span class="p">)</span><span class="w">
+</span><span class="n">tf_disputed</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.data.frame</span><span class="p">(</span><span class="n">dtm1</span><span class="p">[</span><span class="n">disputed</span><span class="p">,</span><span class="w"> </span><span class="p">])</span><span class="w">
+</span><span class="n">pred</span><span class="w">  </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">predict</span><span class="p">(</span><span class="n">hm_fit</span><span class="p">,</span><span class="w"> </span><span class="n">newdata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tf_disputed</span><span class="p">)</span><span class="w">
+</span><span class="nf">sign</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="plot">Plot</h1>
+<p>Make a plot</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span><span class="w">
+</span><span class="n">data.frame</span><span class="p">(</span><span class="n">nletters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nchar</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">dtm</span><span class="p">)))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nletters</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">geom_histogram</span><span class="p">(</span><span class="n">binwidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+</span><span class="n">geom_vline</span><span class="p">(</span><span class="n">xintercept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">nchar</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">dtm</span><span class="p">))),</span><span class="w"> 
+           </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"green"</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">.5</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+</span><span class="n">labs</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Number of Letters"</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Number of Words"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>See also https://cran.r-project.org/web/views/WebTechnologies.html</p>
+
+<h1 id="topic-modeling">Topic Modeling</h1>
+
+<p>Another technique that is very popular is Latent Dirichlet Allocation (LDA), 
+which yields probabilities that each document falls in one of $K$ topics. 
+Every document is a mixture of $K$ topics and every topic is a mixture of words</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">topicmodels</span><span class="p">)</span><span class="w">
+</span><span class="n">data</span><span class="p">(</span><span class="s2">"AssociatedPress"</span><span class="p">)</span><span class="w">
+</span><span class="n">ap_lda</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">LDA</span><span class="p">(</span><span class="n">AssociatedPress</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">control</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1234</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Probability that each word was generated by a topic (does not sum to 1)</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">ap_topics</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy</span><span class="p">(</span><span class="n">ap_lda</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"beta"</span><span class="p">)</span><span class="w">
+</span><span class="n">ap_topics</span><span class="w">
+</span></code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">ap_top_terms</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ap_topics</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">group_by</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">top_n</span><span class="p">(</span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">arrange</span><span class="p">(</span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="w">
+
+</span><span class="n">ap_top_terms</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reorder</span><span class="p">(</span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ggplot</span><span class="p">(</span><span class="n">aes</span><span class="p">(</span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">factor</span><span class="p">(</span><span class="n">topic</span><span class="p">)))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_col</span><span class="p">(</span><span class="n">show.legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span><span class="w"> </span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="n">scales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"free"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">coord_flip</span><span class="p">()</span><span class="w">
+
+</span></code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">ap_topics</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">topic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paste0</span><span class="p">(</span><span class="s2">"topic"</span><span class="p">,</span><span class="w"> </span><span class="n">topic</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">spread</span><span class="p">(</span><span class="n">topic</span><span class="p">,</span><span class="w"> </span><span class="n">beta</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">filter</span><span class="p">(</span><span class="n">topic1</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">.001</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">topic2</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">.001</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">log_ratio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">log2</span><span class="p">(</span><span class="n">topic2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">topic1</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Document proportions (these do sum to 1 across topics)</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">ap_documents</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy</span><span class="p">(</span><span class="n">ap_lda</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"gamma"</span><span class="p">)</span><span class="w">
+</span><span class="n">ap_documents</span><span class="w">
+</span><span class="n">filter</span><span class="p">(</span><span class="n">ap_documents</span><span class="p">,</span><span class="w"> </span><span class="n">document</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<h2 id="word2vec">word2vec</h2>
+
+<p>The “word2vec” represents each word (grouping) in a vocubulary as a point in a large 
+multidimensional space in such a way that points that are close together represent
+similar words. You can then do some matrix algebra on these vectors to get closer 
+to working with the “meaning” of words.</p>
+
+<p>For more details, see this vignette</p>
+
+<p>https://cran.r-project.org/web/packages/text2vec/vignettes/glove.html</p>
+
+<p>in the <strong>text2vec</strong> R package. Here is some (corrected) code from that vignette.</p>
+
+<p>First, we download some text data from Wikipedia</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">text2vec</span><span class="p">)</span><span class="w">
+</span><span class="n">download.file</span><span class="p">(</span><span class="s2">"http://mattmahoney.net/dc/text8.zip"</span><span class="p">,</span><span class="w"> </span><span class="n">destfile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"text8.zip"</span><span class="p">)</span><span class="w">
+</span><span class="n">unzip</span><span class="p">(</span><span class="s2">"text8.zip"</span><span class="p">,</span><span class="w"> </span><span class="n">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"text8"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Now, read it into R and break it into tokens by whitespace:</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">wiki</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">readLines</span><span class="p">(</span><span class="s2">"text8"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">warn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">tokens</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">space_tokenizer</span><span class="p">(</span><span class="n">wiki</span><span class="p">)</span><span class="w">
+</span><span class="n">it</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">itoken</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span><span class="w"> </span><span class="n">progressbar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">vocab</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">create_vocabulary</span><span class="p">(</span><span class="n">it</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+<p>Get rid on terms that appear less than five times and create a “term-co-occurence matrix”
+(TCM), which is a square matrix with rows and columns equal
+to the number of terms (left) in the vocabulary and each non-diagonal cell is
+equal to the number of times the word in row <code class="highlighter-rouge">i</code> and the word in column <code class="highlighter-rouge">j</code> appear
+within some (five, in this case) number of words of each other.</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">vocab</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">prune_vocabulary</span><span class="p">(</span><span class="n">vocab</span><span class="p">,</span><span class="w"> </span><span class="n">term_count_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5L</span><span class="p">)</span><span class="w">
+</span><span class="n">vectorizer</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">vocab_vectorizer</span><span class="p">(</span><span class="n">vocab</span><span class="p">)</span><span class="w">
+</span><span class="n">tcm</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">create_tcm</span><span class="p">(</span><span class="n">it</span><span class="p">,</span><span class="w"> </span><span class="n">vectorizer</span><span class="p">,</span><span class="w"> </span><span class="n">skip_grams_window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5L</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>We choose the unknowns to minimize</p>
+
+<script type="math/tex; mode=display">J = \sum_{i=1}^V \sum_{j=1}^V \max{1, \frac{X_{ij}}{x_{\mbox{max}}}}^\alpha \times
+      \left(\mathbf{w}_i^\top \mathbf{w}_j + \mathbf{b}_i + \mathbf{b}_j - 
+      \log X_{ij}\right)^2</script>
+
+<p>where $X_{ij}$ is the co-occurance of $i$ and $j$ to represent each word as a 
+(very long) vector, $\mathbf{w}$ that is a weighted sum of some basis.</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">glove</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">GlobalVectors</span><span class="o">$</span><span class="n">new</span><span class="p">(</span><span class="n">word_vectors_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">50</span><span class="p">,</span><span class="w"> </span><span class="n">vocabulary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vocab</span><span class="p">,</span><span class="w"> </span><span class="n">x_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span><span class="p">)</span><span class="w">
+
+</span><span class="n">word_vectors_main</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glove</span><span class="o">$</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">tcm</span><span class="p">,</span><span class="w"> </span><span class="n">n_iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="p">)</span><span class="w"> </span><span class="c1"># modifies the state of glove
+</span><span class="n">word_vectors_context</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">glove</span><span class="o">$</span><span class="n">components</span><span class="w">
+</span><span class="n">word_vectors</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">word_vectors_main</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">word_vectors_context</span><span class="p">)</span><span class="w">
+
+</span><span class="nf">dim</span><span class="p">(</span><span class="n">word_vectors</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Finally, what happens if we take the word vector for “paris”, subtract the word 
+vector for “france”, and add the word vector “germany”? We can compute the correlation
+(cosine similarity) between this new word vector and the closest existing word vectors.</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">berlin</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">word_vectors</span><span class="p">[</span><span class="s2">"paris"</span><span class="p">,</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> 
+  </span><span class="n">word_vectors</span><span class="p">[</span><span class="s2">"france"</span><span class="p">,</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> 
+  </span><span class="n">word_vectors</span><span class="p">[</span><span class="s2">"germany"</span><span class="p">,</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">]</span><span class="w">
+</span><span class="n">cos_sim</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">sim2</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word_vectors</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">berlin</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cosine"</span><span class="p">,</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"l2"</span><span class="p">)</span><span class="w">
+</span><span class="n">head</span><span class="p">(</span><span class="n">sort</span><span class="p">(</span><span class="n">cos_sim</span><span class="p">[,</span><span class="m">1</span><span class="p">],</span><span class="w"> </span><span class="n">decreasing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">),</span><span class="w"> </span><span class="m">5</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+

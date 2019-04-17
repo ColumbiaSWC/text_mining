@@ -1,0 +1,276 @@
+<p>```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+# Acknowledgements
+
+This tutorial is heavily based on and influenced by the excellent R for Social Scientists Data Carpentry Workshop, available [https://datacarpentry.org/r-socialsci/00-intro/index.html](here)
+
+# Setup
+
+**[https://datacarpentry.org/r-socialsci/setup.html](Data Carpentry Setup Information)**
+
+## R and R Studio
+R is an open source scripted programming language targeted at statistical analysis. It includes graphics capabilities and tools for data analysis and reading and writing data to and from files. [https://datacarpentry.org/r-socialsci/00-intro/index.html](Source)
+
+
+RStudio is an Integrated Development Environment (IDE) which is designed around making the R program more easily accessible. The RStudio IDE open-source product is free under the Affero General Public License (AGPL) v3. 
+
+The R Studio interface is broken into three parts, the top left corner is reserved for editing scripts and RMarkdown files. The right side has your environment, which is for variables. The bottom right is for packages and help. And the bottom left is your Console where you can enter commands to R directly.
+
+## Getting Started
+
+It's best to organize things into a specific working directory, or project folder. We'll do so by creating a new project for this tutorial.
+
+* Under the `File` menu, click on `New project`, choose `New directory`, then `New project`
+* Enter a name for this new folder (or “directory”), and choose a convenient location for it. This will be your working directory for the rest of the day (e.g., `~/textmining`)
+* Click on `Create project`
+* Create a new file where we will type our scripts. Go to File &gt; New File &gt; R Markdown Click the save icon on your toolbar and save your script as “`textmining.Rmd`”.
+
+## R Markdown Files
+
+R Markdown files are a kind of notebook, where you can have "chunks" of R Code that can be run in steps. This is useful for separating notes and words out from your code, preventing all of your code from running together, and you can create reports from them.
+
+Detailed Cheatsheets can be found here: [http://rstudio.com/cheatsheets](http://rstudio.com/cheatsheets)
+
+R Markdowns contain three important types of content:
+
+1. An (optional) YAML header surrounded by ---
+2. Chunks of R code surrounded by ```{r}
+3. Text mixed with simple text formatting like `# heading` and `_italics_`.
+
+&gt; ---
+&gt; title: "Diamond sizes"
+&gt; date: 2016-08-25
+&gt; output: html_document
+&gt; ---
+&gt; 
+&gt; ```{r setup, include = FALSE}
+&gt;  library(ggplot2)
+&gt;  library(dplyr)
+&gt; 
+&gt;  smaller &lt;- diamonds %&gt;% 
+&gt;   filter(carat &lt;= 2.5)
+&gt; ```
+&gt; 
+&gt; We have data about `r nrow(diamonds)` diamonds. Only 
+&gt; `r nrow(diamonds) - nrow(smaller)` are larger than
+&gt; 2.5 carats. The distribution of the remainder is shown
+&gt; below:
+&gt; 
+&gt; ```{r, echo = FALSE}
+&gt;  smaller %&gt;% 
+&gt;   ggplot(aes(carat)) + 
+&gt;   geom_freqpoly(binwidth = 0.01)
+&gt; ```
+
+
+### Creating Chunks
+
+Chunks are important to understand for this. Youc an use the Insert button at the top right of the main window (it has a green C and Insert dropdown) or use control + alt + i to insert a chunk, like so:
+
+```{r}
+# empty chunk
+</code></pre>
+</div>
+
+<p>Each chunk has alittle green arrow at the right which lets you run the code it contains, but you can also do so by highlighting code and using control + enter</p>
+
+<h3 id="installing-packages">Installing Packages</h3>
+
+<p>In a chunk, you can install packages with the <code class="highlighter-rouge">install.packages()</code> function</p>
+
+<pre><code class="language-{r}"># install.packages("tidyverse")
+</code></pre>
+
+<h1 id="basics-of-r">Basics of R</h1>
+
+<h2 id="math">Math</h2>
+
+<p>You can do simple math with R, try it in the console:</p>
+
+<pre><code class="language-{r}">3+5
+</code></pre>
+
+<pre><code class="language-{r}">12/7
+</code></pre>
+
+<h2 id="creating-objects">Creating Objects</h2>
+<p>Objects are variables that we assign meaning to. R uses <code class="highlighter-rouge">&lt;-</code> to assign values. It can assign numbers, characters and words, true and false values, and collections of these such as vectors, matrices, and arrays. These can be important for types of analysis.</p>
+
+<pre><code class="language-{r}">weight_lbs &lt;- 5.0
+weight_kgs &lt;- weight_lbs * 2.205
+
+weight_lbs
+weight_kgs
+</code></pre>
+
+<h3 id="vectors">Vectors</h3>
+<p>A vector is the most common and basic data type in R, and is pretty much the workhorse of R. A vector is composed by a series of values, which can be either numbers or characters. We can assign a series of values to a vector using the c() function.</p>
+
+<h4 id="assign">Assign</h4>
+<pre><code class="language-{r}">no_membrs &lt;- c(3, 7, 10, 6)
+no_membrs
+</code></pre>
+
+<pre><code class="language-{r}">respondent_wall_type &lt;- c("muddaub", "burntbricks", "sunbricks")
+respondent_wall_type
+</code></pre>
+
+<h4 id="length">Length</h4>
+<pre><code class="language-{r}">length(no_membrs)
+length(respondent_wall_type)
+</code></pre>
+
+<h4 id="class">Class</h4>
+<pre><code class="language-{r}">class(no_membrs)
+class(respondent_wall_type)
+</code></pre>
+
+<h4 id="structure">Structure</h4>
+<pre><code class="language-{r}">str(no_membrs)
+str(respondent_wall_type)
+</code></pre>
+
+<h4 id="types-of-vectors">Types of Vectors:</h4>
+
+<ul>
+  <li>“character” are letters and words</li>
+  <li>“numeric” (or “double”) are numbers</li>
+  <li>“logical” for TRUE and FALSE (the boolean data type)</li>
+  <li>“integer” for integer numbers (e.g., 2L, the L indicates to R that it’s an integer)</li>
+  <li>“complex” to represent complex numbers with real and imaginary parts (e.g., 1 + 4i) and that’s all we’re going to say about them</li>
+  <li>“raw” for bitstreams that we won’t discuss further</li>
+</ul>
+
+<h4 id="subsetting-vectors">Subsetting Vectors</h4>
+
+<p>We can extract specific values from a vector like so:</p>
+
+<pre><code class="language-{r}">respondent_wall_type
+respondent_wall_type[2]
+respondent_wall_type[c(3, 2)]
+no_membrs
+no_membrs[c(TRUE, FALSE, TRUE, TRUE)]
+</code></pre>
+
+<p>Or</p>
+
+<pre><code class="language-{r}">possessions &lt;- c("car", "bicycle", "radio", "television", "mobile_phone")
+possessions[possessions == "car" | possessions == "bicycle"] # returns both car and bicycle
+possessions %in% c("car", "bicycle", "motorcycle", "truck", "boat") # returns logical TRUE or FALSE for each item
+possessions[possessions %in% c("car", "bicycle", "motorcycle", "truck", "boat")] # Returns the ones that posessions contains
+</code></pre>
+
+<p>Missing data shows up as <code class="highlighter-rouge">NA</code> values and you’ll need to learn about things like <code class="highlighter-rouge">is.na()</code>, <code class="highlighter-rouge">na.omit()</code>, and <code class="highlighter-rouge">complete.cases()</code> to fully deal with them. For example:</p>
+
+<pre><code class="language-{r}">rooms &lt;- c(2, 1, 1, NA, 4)
+mean(rooms) # fails because NA
+mean(rooms, na.rm = TRUE)
+mean(rooms[!is.na(rooms)])
+</code></pre>
+
+<h3 id="data-frames">Data Frames</h3>
+
+<p>For our purpose we’re going to focus on what a dataset typically is assign as: a <code class="highlighter-rouge">data.frame</code>. A <code class="highlighter-rouge">data.frame</code> is how R handles things like CSV or excel files (or most other data files for that matter) where you have rows of observations and columns of variables of one type.</p>
+
+<p><img src="data-frame.svg" alt="Source: https://datacarpentry.org/r-socialsci/02-starting-with-data/index.html" /></p>
+
+<pre><code class="language-{r}">library(tidyverse)
+interviews &lt;- read_csv("https://ndownloader.figshare.com/files/11492171", na = "NULL")
+head(interviews)
+</code></pre>
+
+<pre><code class="language-{r}">typeof(interviews)
+head(str(interviews))
+</code></pre>
+
+<h3 id="subsetting-dataframes">Subsetting Dataframes</h3>
+
+<p>You can get specific values with positions:</p>
+
+<pre><code class="language-{r}">interviews[1, 1] # this gets the value at the first row and first column position
+</code></pre>
+
+<pre><code class="language-{r}">interviews[1:3, 4:7] # gets rows 1 through 3 and columns 4 through 7
+</code></pre>
+
+<p>dplyr, a popular subsetting package, has good tools for this as well:</p>
+<pre><code class="language-{r}">library(dplyr)
+head(select(interviews, village, years_liv))
+</code></pre>
+
+<pre><code class="language-{r}">head(filter(interviews, years_liv &gt; 10))
+</code></pre>
+
+<h2 id="factors">Factors</h2>
+
+<p>Factors are categorical or ordinal data. Here’s an example of ordered factor</p>
+<pre><code class="language-{r}">credit_rating &lt;- c("AAA", "AA", "A", "BBB", "AA", "BBB", "A")
+
+credit_factor_ordered &lt;- factor(credit_rating, ordered = TRUE, 
+                                levels = c("AAA", "AA", "A", "BBB"))
+
+plot(credit_factor_ordered)
+</code></pre>
+
+<h1 id="dplyr--tidyverse">Dplyr &amp; Tidyverse</h1>
+
+<p>The modern methods for subsetting and manipulating data are via the <code class="highlighter-rouge">dplyr()</code> and <code class="highlighter-rouge">tidyverse()</code> packages.</p>
+
+<p><code class="highlighter-rouge">Tidyverse</code> is what allows us to create tibbles (tidy data frames) that mostly differ in that they print nicely and they can’t have rownames. Tibbles are the basis for a lot of tidy data manipulation, though.</p>
+
+<p><code class="highlighter-rouge">Dplyr</code> lets us use powerful manipulation commands and pipe (or chain) these commands together:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">select()</code>: subset columns</li>
+  <li><code class="highlighter-rouge">filter()</code>: subset rows on conditions</li>
+  <li><code class="highlighter-rouge">mutate()</code>: create new columns by using information from other columns</li>
+  <li><code class="highlighter-rouge">group_by()</code> and <code class="highlighter-rouge">summarize()</code>: create summary statistics on grouped data</li>
+  <li><code class="highlighter-rouge">arrange()</code>: sort results</li>
+  <li><code class="highlighter-rouge">count()</code>: count discrete values</li>
+</ul>
+
+<pre><code class="language-{r}">interviews %&gt;%
+  select(-interview_date) %&gt;%
+  filter(respondent_wall_type == "burntbricks") %&gt;%
+  summarise(average_years = mean(years_liv))
+</code></pre>
+
+<pre><code class="language-{r}">head(interviews)
+interviews2 &lt;- interviews %&gt;%
+  mutate(mem_by_years = no_membrs * years_liv)
+head(interviews2)
+</code></pre>
+
+<h1 id="ggplot">Ggplot</h1>
+<p>Ggplot is the more modern way to graph with R. It’s flexible and makes plots modular, in that you can add geometry on top of data. Ggplot stands for the “grammar of graphics.” The general steps are</p>
+
+<ol>
+  <li>format your data</li>
+  <li>set your plane</li>
+  <li>add your geometry</li>
+  <li>add themes and tweak visuals</li>
+  <li>label</li>
+</ol>
+
+<pre><code class="language-{r}">library(ggplot2)
+str(mpg)
+?mpg
+</code></pre>
+
+<p>Let’s look at displaced gas and highway miles</p>
+<pre><code class="language-{r}">ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point()
+</code></pre>
+
+<pre><code class="language-{r}">library(ggthemes)
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point(aes(colour = manufacturer)) +
+  geom_smooth(method="lm", se = FALSE) +
+  facet_wrap(~class) +
+  theme_light() +
+  ggtitle("Miles per Gallon by Manufacturer per Car Type") +
+  xlab("Highway Miles") +
+  ylab("Gallons of Gas")
+</code></pre>
+

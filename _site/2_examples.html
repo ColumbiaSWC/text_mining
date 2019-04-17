@@ -1,0 +1,155 @@
+
+
+<html>
+  <head>
+  
+    <title>Text Mining Examples | Text Mining in R</title>
+    
+       <link rel="stylesheet" href="css/styles.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-dark.css" type="text/css">
+    <link rel="stylesheet" href="css/solarized-light.css" type="text/css">    
+
+  </head>
+  <body>
+    
+
+
+<div class="banner">
+  <h1 style="font-size:3rem";>Text Mining in R</h1>
+
+  <nav class="nav">
+    <a href="about">About</a>
+    <a href="contents">Contents</a>    
+
+  <hr>
+
+  
+  <h1>Text Mining Examples</h1>
+  
+
+</div>
+
+
+
+
+    <h3 id="jane-austen-books">Jane Austen Books</h3>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">janeaustenr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">stringr</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">austen_books</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">group_by</span><span class="p">(</span><span class="n">book</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">linenumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row_number</span><span class="p">(),</span><span class="w">
+         </span><span class="n">chapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">cumsum</span><span class="p">(</span><span class="n">str_detect</span><span class="p">(</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">regex</span><span class="p">(</span><span class="s2">"^chapter [\\divxlc]"</span><span class="p">,</span><span class="w"> </span><span class="n">ignore_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">))))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">unnest_tokens</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w">
+
+</span><span class="n">tidy_books</span><span class="w">
+</span></code></pre>
+</div>
+
+<h3 id="sentiment">Sentiment</h3>
+
+<p>There are several sentiment analysis datasets, for example here are sentiment assignments from the <a href="https://www.nrc-cnrc.gc.ca/eng/solutions/advisory/emotion_lexicons.html">National Resource Council of Canada’s Emotional Lexicon</a></p>
+
+<p>Let’s find words that are associated with being joyful</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">nrc_joy</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"nrc"</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> 
+  </span><span class="n">filter</span><span class="p">(</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"joy"</span><span class="p">)</span><span class="w"> </span><span class="c1"># extract joyful words as determined by the nrc group
+</span><span class="w">
+</span><span class="n">head</span><span class="p">(</span><span class="n">nrc_joy</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Let’s look at the sentiment of words in the book “Emma”</p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">filter</span><span class="p">(</span><span class="n">book</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Emma"</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">nrc_joy</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Now let’s do an inner join (so just of the words that are in both datasets) of Emma with the Bing sentiment analysis</p>
+
+<p>``R
+jane_austen_sentiment &lt;- tidy_books %&gt;%
+  inner_join(get_sentiments(“bing”)) %&gt;%
+  count(book, index = linenumber %/% 80, sentiment) %&gt;%
+  spread(sentiment, n, fill = 0) %&gt;%
+  mutate(sentiment = positive - negative)</p>
+
+<p>head(jane_austen_sentiment)</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">Notice</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">both</span><span class="w"> </span><span class="n">negative</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">positive</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">net</span><span class="w"> </span><span class="n">sentiment</span><span class="w"> </span><span class="p">(</span><span class="n">representing</span><span class="w"> </span><span class="n">positive</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">negative</span><span class="w"> </span><span class="n">language</span><span class="p">,</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">whatever</span><span class="w"> </span><span class="n">that</span><span class="s1">'s worth).
+
+And now let'</span><span class="n">s</span><span class="w"> </span><span class="n">plot</span><span class="w"> </span><span class="n">it</span><span class="w">
+
+</span><span class="err">```</span><span class="n">R</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">jane_austen_sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">book</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_col</span><span class="p">(</span><span class="n">show.legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span><span class="n">book</span><span class="p">,</span><span class="w"> </span><span class="n">ncol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">scales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"free_x"</span><span class="p">)</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Lastly, let’s do a sentiment analysis of the most frequent words’ contribution to positive and negative sentiment.</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"bing"</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">group_by</span><span class="p">(</span><span class="n">sentiment</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">top_n</span><span class="p">(</span><span class="m">10</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ungroup</span><span class="p">()</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reorder</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">ggplot</span><span class="p">(</span><span class="n">aes</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sentiment</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_col</span><span class="p">(</span><span class="n">show.legend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">scales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"free_y"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Contribution to sentiment"</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NULL</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">coord_flip</span><span class="p">()</span><span class="w">  
+</span></code></pre>
+</div>
+
+<h3 id="word-clouds">Word Clouds</h3>
+<p>R Also has good libraries for wod clouds (which are less useful for statistics, but fun)</p>
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">)</span><span class="w">
+
+</span><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">anti_join</span><span class="p">(</span><span class="n">stop_words</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">with</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">max.words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>We could color the words by sentiment.
+A good list of colors is available <a href="http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf">here</a></p>
+
+<div class="language-R highlighter-rouge"><pre class="highlight"><code><span class="n">sentiment_books</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">tidy_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">inner_join</span><span class="p">(</span><span class="n">get_sentiments</span><span class="p">(</span><span class="s2">"bing"</span><span class="p">))</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">sentiment</span><span class="p">,</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+  </span><span class="n">mutate</span><span class="p">(</span><span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reorder</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">))</span><span class="w">
+
+</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">nrow</span><span class="p">(</span><span class="n">sentiment_books</span><span class="p">)</span><span class="w">
+</span><span class="n">colors</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="s2">"grey"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w">
+</span><span class="n">colors</span><span class="p">[</span><span class="n">sentiment_books</span><span class="o">$</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"negative"</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="s2">"coral2"</span><span class="w">
+</span><span class="n">colors</span><span class="p">[</span><span class="n">sentiment_books</span><span class="o">$</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"positive"</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w">  </span><span class="s2">"cyan3"</span><span class="w">
+
+</span><span class="n">sentiment_books</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w">
+</span><span class="n">with</span><span class="p">(</span><span class="n">wordcloud</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">colors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">colors</span><span class="p">,</span><span class="w"> </span><span class="n">max.words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span><span class="p">))</span><span class="w">
+</span></code></pre>
+</div>
+
+
+    
+<div class="nav" style="margin-top: 3em">
+<div style="text-align:center">§</div>
+<p style="text-align: center">
+<a href="https://cupop.columbia.edu/)">Columbia Population Research Center</a>
+<br>
+<a href="https://rcfoundations.research.columbia.edu/">Foundations for Research Computing</a>
+</p>
+</div>
+    
+
+  </body>
+  
