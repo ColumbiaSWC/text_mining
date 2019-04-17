@@ -135,7 +135,7 @@ climate_tweets_paired_words %>%
   count(paired_words, sort = TRUE)
 ```
 
-```{r}
+```R
 library(tidyr)
 climate_tweets_separated_words <- climate_tweets_paired_words %>%
   separate(paired_words, c("word1", "word2"), sep = " ")
